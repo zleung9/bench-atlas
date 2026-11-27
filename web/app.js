@@ -266,7 +266,9 @@
     search.value = state.q; search.autocomplete = 'off';
     const verdict = select([['','全部状态']],state.verdict,'filter-verdict');
     const results = el('div','list-results');
-    const form = el('form','toolbar',labelControl('数据集',datasetSelect),labelControl('模型',modelSelect),labelControl('搜索题目',search,'search-field'),labelControl('判定状态',verdict));
+    const selectors = el('section','panel scope-selectors',labelControl('数据集',datasetSelect),labelControl('模型',modelSelect));
+    selectors.setAttribute('aria-label','选择数据集和模型');
+    const form = el('form','toolbar',labelControl('搜索题目',search,'search-field'),labelControl('判定状态',verdict));
     const submit = el('button','btn','搜索'); submit.type = 'submit'; form.append(submit);
     function apply(replace = false) {
       clearTimeout(searchTimer);
@@ -283,10 +285,12 @@
     const back = state.from === 'models' ? link('返回模型',{view:'models',model:state.model},'btn quiet') : link('返回数据集',{view:'datasets'},'btn quiet');
     const summary = record(state.dataset,state.model);
     const metrics = el('details','record-detail panel',el('summary','',el('strong','','聚合评分与来源'),el('span','muted',state.model)),
-      el('div','panel-body',readingBlock('主指标',summary?.primary),readingBlock('补充指标',summary?.secondary),readingBlock('记录版本',summary?.version)));
-    content.replaceChildren(pageHead('QUESTION INDEX',datasetName(d),text(d.description,'')),metrics,
+      el('div','panel-body',readingBlock('主指标',summary?.primary),readingBlock('补充指标',summary?.secondary),readingBlock('记录版本',summary?.version),
+        has(d.description) ? disclosure('数据集说明', null, documentText(d.description)) : null));
+    metrics.open = listView?.metrics.open ?? true;
+    content.replaceChildren(pageHead('QUESTION INDEX',datasetName(d)),selectors,metrics,
       el('section','panel',panelHead('题目列表',has(d.metric) ? `评测指标 · ${text(d.metric)}` : null, back),form,results));
-    return {scope:JSON.stringify([state.dataset,state.model,state.from]),search,verdict,results};
+    return {scope:JSON.stringify([state.dataset,state.model,state.from]),search,verdict,results,metrics};
   }
   async function questionsPage(rawState, id, signal, focusPage) {
     const state = resolveList(rawState);

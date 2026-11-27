@@ -32,6 +32,40 @@ try {
   await waitPage('document.querySelector(".matrix tbody tr th").textContent.includes("gpt-6.1-sol")','PolyReal descending sort');
   await evaluate('document.querySelector(\'.score-link[href*="dataset=polyreal"][href*="model=gpt-6.1-sol"]\').click()');
   await waitPage('document.querySelectorAll(".question-row").length===30','list page');
+  for (const [width,height] of [[390,844],[1440,1000]]) {
+    await rpc('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width===390});
+    const layout=await evaluate(`(()=>{
+      const dataset=document.querySelector('#filter-dataset'), model=document.querySelector('#filter-model');
+      const summary=document.querySelector('.record-detail'), search=document.querySelector('#filter-search');
+      const verdict=document.querySelector('#filter-verdict'), panel=search?.closest('.panel');
+      const rows=[...document.querySelectorAll('.question-row')];
+      const above=(a,b)=>a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;
+      return {
+        visible:[dataset,model,summary,panel,search,verdict,rows[0]].every(node=>node?.checkVisibility({checkVisibilityCSS:true,checkOpacity:true})),
+        selectorsFirst:dataset && model && summary && above(dataset,summary) && above(model,summary),
+        summaryBeforeList:summary && panel && above(summary,panel),
+        samePanel:panel && panel.contains(verdict) && rows.every(row=>panel.contains(row))
+      };
+    })()`);
+    assert.deepEqual(layout,{visible:true,selectorsFirst:true,summaryBeforeList:true,samePanel:true},`${width}px question-list layout`);
+  }
+  // PolyReal question 2 has a different archived verdict for these two models.
+  for (const [model,score,verdict] of [['qwen3.8','32.67%','部分正确'],['gpt-6.1-sol','91.33%','正确']]) {
+    await evaluate(`(()=>{
+      const select=document.querySelector('#filter-model');
+      select.value=${JSON.stringify(model)};
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+    })()`);
+    await waitPage(`(()=>{
+      const row=[...document.querySelectorAll('.question-row')].find(link=>{
+        const params=new URLSearchParams(link.hash.slice(1));
+        return params.get('dataset')==='polyreal' && params.get('qid')==='2' && params.get('model')===${JSON.stringify(model)};
+      });
+      return document.querySelector('.record-detail summary')?.textContent.includes(${JSON.stringify(model)}) &&
+        document.querySelector('.record-detail .panel-body')?.textContent.includes(${JSON.stringify(score)}) &&
+        row?.querySelector('.badge')?.textContent===${JSON.stringify(verdict)};
+    })()`,`PolyReal ${model} aggregate score and question 2 verdict`);
+  }
   await evaluate(`(()=>{const v=document.querySelector('#filter-verdict');v.value='不可判';v.dispatchEvent(new Event('change'));})()`);
   await waitPage('document.querySelectorAll(".question-row").length===9','9 unadjudicable Sol items');
   await evaluate('document.querySelector(".question-row").click()');
@@ -121,7 +155,7 @@ try {
   await navigateToQuestion('polyreal','525','gpt-6-luna');
   await waitPage('!!document.querySelector(".answer-card table th")','real model answer rendered as a Markdown table');
   assert.deepEqual(errors,[]);
-  console.log('Browser OK: overview, sorting, list, verdict filter, desktop/mobile comparison scroll and deep links, archived/blank reasoning, mobile layout, real Markdown table, question/answer/solution math.');
+  console.log('Browser OK: overview, sorting, desktop/mobile question-list order, model switch and verdict filter, desktop/mobile comparison scroll and deep links, archived/blank reasoning, mobile layout, real Markdown table, question/answer/solution math.');
   ws.close();
 } finally {
   chrome.kill(); await exited;

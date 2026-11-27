@@ -131,6 +131,8 @@ h1 { font-size: clamp(1.8rem,3.2vw,3.15rem); letter-spacing: -.04em; font-weight
 .toolbar { align-items:flex-end; }
 .field { flex:0 1 auto; display:grid; gap:.25rem; min-width:0; color:var(--muted); font-size:.87rem; font-weight:560; }
 .search-field { flex:1 1 14rem; }
+.scope-selectors { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap:.8rem 1.25rem; padding:1rem clamp(1rem,1.65vw,1.65rem); }
+.record-detail .doc-fold { margin-top:1rem; }
 .control, .btn { min-height:42px; min-width:0; max-width:100%; padding:.45rem .74rem; border:1px solid #aabbb4; background:white; border-radius:5px; }
 .control { width:100%; color:var(--ink); font-weight:450; }
 select.control { padding-inline-end:2rem; appearance:none; background-image:linear-gradient(45deg,transparent 50%,#42665b 50%),linear-gradient(135deg,#42665b 50%,transparent 50%); background-size:5px 5px,5px 5px; background-position:calc(100% - 14px) 52%,calc(100% - 9px) 52%; background-repeat:no-repeat; }
