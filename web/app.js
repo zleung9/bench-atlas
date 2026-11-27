@@ -541,19 +541,21 @@
     if (hasComparison) head.append(jumpButton(primary ? '跳至对照答卷 ↓' : '返回当前答卷 ↑', primary ? 'answer-primary-other' : 'answer-primary', 'mobile-jump'));
     const card = el('article', 'answer-card', head);
     card.id = primary ? 'answer-primary' : 'answer-primary-other'; card.tabIndex = -1;
+    const reasoningBody = el('div', 'reasoning-content');
+    if (text(data?.reasoning, '').trim()) reasoningBody.append(documentText(data.reasoning));
+    const reasoning = el('section', 'model-reasoning', el('h4', 'doc-label', '思维链'), reasoningBody);
     if (!data) {
-      card.append(empty('暂无该模型的作答记录', '可切换到有记录的模型查看本题答卷。'));
+      card.append(empty('暂无该模型的作答记录', '可切换到有记录的模型查看本题答卷。'), reasoning);
       return card;
     }
     card.append(gradeSummary(ds, data, q));
     const output = el('section', 'model-output', el('h4', 'doc-label', '模型答案'));
     if (has(data.answer) && text(data.answer).trim()) output.append(documentText(data.answer));
     else output.append(el('p', 'answer-missing', '无作答正文 · 此记录未归档模型输出。'));
-    card.append(output);
+    card.append(output, reasoning);
     const evidence = has(data.basis) ? documentText(data.basis) : el('p', 'muted', '此记录未提供判定依据。');
     card.append(disclosure('判定依据与评审记录', !has(data.basis) ? '未提供依据' : null, evidence,
       el('p', 'record-version', `记录版本 · ${text(data.version, '未提供')}`)));
-    if (has(data.reasoning)) card.append(disclosure('模型推理过程', '归档原文', documentText(data.reasoning)));
     return card;
   }
   async function detailPage(state,id,signal,refreshBody) {
@@ -575,9 +577,14 @@
     if (other && !choices.includes(other)) choices.push(other);
     const choice = m => [m, answered.has(m) ? m : `${m}（无本题记录）`];
     const comparing = select([['','选择模型对照…'],...choices.filter(m=>m!==model).map(choice)],other,'compare-model');
-    comparing.addEventListener('change',()=>go({...state,model,compare:comparing.value}));
+    // A model selection changes the shareable URL without navigating to a fragment.
+    function selectModels(selected, compare) {
+      history.pushState(null, '', hash({...state, model:selected, compare}));
+      render();
+    }
+    comparing.addEventListener('change',()=>selectModels(model, comparing.value));
     const primary = select(choices.map(choice),model,'answer-model');
-    primary.addEventListener('change',()=>go({...state,model:primary.value,compare:other === primary.value ? model : other}));
+    primary.addEventListener('change',()=>selectModels(primary.value, other === primary.value ? model : other));
     const list = {...state,view:'questions',qid:'',compare:'',model};
     const nav = el('nav','detail-nav',link('返回题目列表',list,'btn quiet'),el('div','inline',
       jumpButton('查看模型作答', 'answer-section'),
@@ -591,7 +598,15 @@
       el('div', other ? 'compare-grid' : 'single-answer', answerCard(state.dataset, q, model, answered.get(model), 'primary', !!other),
         other ? answerCard(state.dataset, q, other, answered.get(other), 'other', true) : null));
     answers.id = 'answer-section'; answers.tabIndex = -1;
-    content.replaceChildren(nav, question, answers);
+    if (question.parentNode === content) {
+      // Keep the question (including loaded images and open disclosures) in the layout.
+      const position = {left:window.scrollX, top:window.scrollY, behavior:'instant'};
+      content.firstElementChild.replaceWith(nav);
+      content.lastElementChild.replaceWith(answers);
+      window.scrollTo(position);
+    } else {
+      content.replaceChildren(nav, question, answers);
+    }
     document.title = `${text(q.title,text(q.qid))} · 衡台`;
   }
   async function render() {

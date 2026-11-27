@@ -40,22 +40,72 @@ try {
   await waitPage('document.querySelectorAll(".answer-card").length===2','side-by-side answers');
   assert.match(await evaluate('document.querySelector(".compare-grid").textContent'),/qwen3\.8/);
   assert.match(await evaluate('document.body.innerText'),/参考答案/);
-  await rpc('Page.navigate',{url:new URL('#view=detail&dataset=polyreal&qid=101&model=deepseek-v4.1-flash&compare=gpt-6.1-sol',site).href});
-  await waitPage('document.title.includes("第 101 题") && !!document.querySelector("img.asset-preview") && document.querySelectorAll(".answer-card").length===2','image and recorded reasoning example');
-  await evaluate('document.querySelector("img.asset-preview").scrollIntoView()');
-  await waitPage('document.querySelector("img.asset-preview").naturalWidth>0','archived source image loads');
-  assert.ok(await evaluate(`document.querySelector('.answer-card').textContent.length>4056`),'archived answer text and reasoning are present');
-  await rpc('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
-  assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Mobile detail layout overflows');
-  await rpc('Page.navigate',{url:new URL('#view=overview',site).href});
-  await waitPage('!!document.querySelector(".matrix")','mobile homepage');
-  assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Mobile overview layout overflows');
-  const formulaId='Introduction_to_Materials_Science_for_Engineers_Shackelford_Example 14.3';
   const navigateToQuestion=async (dataset,qid,model)=>{
     const url=new URL(site);
     url.hash=new URLSearchParams({view:'detail',dataset,qid,model}).toString();
     await rpc('Page.navigate',{url:url.href});
   };
+  const afterPaint=()=>evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  const assertReasoning=async (card, archived=false)=>{
+    const section=await evaluate(`(()=>{
+      const region=document.querySelector(${JSON.stringify(card+' .model-reasoning')});
+      const body=region?.querySelector('.reasoning-content');
+      const visible=node=>node?.checkVisibility({checkOpacity:true,checkVisibilityCSS:true}) && node.getBoundingClientRect().height>0;
+      return {label:visible(region) && region.innerText.split('\\n').some(line=>line.trim()==='思维链'),
+        body:visible(body), text:body?.innerText.trim()};
+    })()`);
+    assert.ok(section.label,`${card} must visibly label the reasoning section 思维链`);
+    assert.ok(section.body,`${card} reasoning content must be visible and have positive height`);
+    if (archived) assert.ok(section.text.length >= 4000, 'PolyReal 101 archived DeepSeek reasoning');
+    else assert.equal(section.text,'',`${card} missing reasoning must display a blank body`);
+  };
+  const sol='gpt-6.1-sol', deepseek='deepseek-v4.1-flash';
+  for (const [device,width,height] of [['desktop',1440,1000],['mobile',390,844]]) {
+    await rpc('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:device==='mobile'});
+    await navigateToQuestion('polyreal','101',sol);
+    await waitPage(`document.title.includes('第 101 题') && document.querySelector('#answer-primary h3')?.textContent===${JSON.stringify(sol)} && !document.querySelector('#answer-primary-other')`,'PolyReal 101 single answer');
+    await evaluate('document.querySelector("img.asset-preview").scrollIntoView()');
+    await waitPage('document.querySelector("img.asset-preview").naturalWidth>0','archived source image loads');
+    await evaluate('document.fonts.ready.then(()=>document.querySelector("#compare-model").scrollIntoView({block:"start",behavior:"instant"}))');
+    await afterPaint();
+    assert.ok(await evaluate('window.scrollY>100'),`${device} comparison must start scrolled down`);
+
+    // Use the actual selects. Wait for both answer cards and a paint before measuring the new layout.
+    for (const [selectId,value,primary,compare] of [
+      ['compare-model','qwen3.8',sol,'qwen3.8'],
+      ['compare-model',deepseek,sol,deepseek],
+      ['answer-model',deepseek,deepseek,sol], // selecting the comparison model swaps the two cards
+      ['compare-model','',deepseek,''],
+    ]) {
+      const action=`${device}, ${selectId} → ${value || '(clear)'}`;
+      const before=await evaluate(`(()=>{
+        const select=document.getElementById(${JSON.stringify(selectId)});
+        select.focus({preventScroll:true});
+        const y=window.scrollY;
+        select.value=${JSON.stringify(value)};
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+        return y;
+      })()`);
+      await waitPage(`document.querySelector('#answer-primary h3')?.textContent===${JSON.stringify(primary)} &&
+        (document.querySelector('#answer-primary-other h3')?.textContent || '')===${JSON.stringify(compare)}`,action);
+      await afterPaint();
+      const after=await evaluate('window.scrollY');
+      assert.ok(Math.abs(after-before)<=2,`${action} moved scrollY from ${before} to ${after}`);
+      assert.deepEqual(await evaluate(`[document.querySelector('#answer-model').value,document.querySelector('#compare-model').value]`),[primary,compare],action);
+      assert.deepEqual(await evaluate('Object.fromEntries(new URLSearchParams(location.hash.slice(1)))'),
+        {view:'detail',dataset:'polyreal',qid:'101',model:primary,...(compare ? {compare} : {})},`${action} deep link`);
+      await assertReasoning('#answer-primary',primary===deepseek);
+      if (compare) await assertReasoning('#answer-primary-other',compare===deepseek);
+      if (device==='mobile') assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Mobile detail layout overflows');
+    }
+  }
+  await navigateToQuestion('chempaperbench','chempaperbench-row-0194','gpt-6-astra');
+  await waitPage(`document.querySelector('#answer-primary')?.innerText.includes('暂无该模型的作答记录')`,'question without an Astra record');
+  await assertReasoning('#answer-primary');
+  await rpc('Page.navigate',{url:new URL('#view=overview',site).href});
+  await waitPage('!!document.querySelector(".matrix")','mobile homepage');
+  assert.ok(await evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'Mobile overview layout overflows');
+  const formulaId='Introduction_to_Materials_Science_for_Engineers_Shackelford_Example 14.3';
   await navigateToQuestion('matscibench',formulaId,'gpt-6-luna');
   await waitPage('document.querySelectorAll(".answer-card .katex").length>=2 && document.querySelectorAll(".katex-display").length>=2','inline answer math and native worked solution');
   const firstQuestionMath=await evaluate('Array.from(document.querySelectorAll(".katex annotation")).map(node=>node.textContent)');
@@ -71,7 +121,7 @@ try {
   await navigateToQuestion('polyreal','525','gpt-6-luna');
   await waitPage('!!document.querySelector(".answer-card table th")','real model answer rendered as a Markdown table');
   assert.deepEqual(errors,[]);
-  console.log('Browser OK: overview, sorting, list, verdict filter, answer comparison, mobile layout, real Markdown table, question/answer/solution math.');
+  console.log('Browser OK: overview, sorting, list, verdict filter, desktop/mobile comparison scroll and deep links, archived/blank reasoning, mobile layout, real Markdown table, question/answer/solution math.');
   ws.close();
 } finally {
   chrome.kill(); await exited;

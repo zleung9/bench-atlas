@@ -215,7 +215,9 @@ select.control { padding-inline-end:2rem; appearance:none; background-image:line
 .grade-guide { max-width:90ch; margin-top:.35rem; font-size:.84rem; line-height:1.55; color:#4b625b; }
 .stage-metric { display:grid; gap:.12rem; margin-block:.38rem; }
 .stage-metric strong { white-space:pre-line; font-size:.94rem; font-variant-numeric:tabular-nums; }
-.model-output { padding-bottom:1.25rem; }
+.model-output, .model-reasoning { padding-bottom:1.25rem; }
+.model-reasoning { border-top:1px solid var(--line); padding-top:1rem; }
+.reasoning-content { min-height:2.25rem; }
 .answer-missing, .record-version { color:var(--muted); font-size:.85rem; }
 .record-version { margin-top:.85rem; }
 .mobile-jump { display:none; }
