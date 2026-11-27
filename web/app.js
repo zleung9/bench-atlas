@@ -257,6 +257,24 @@
     if (!d) return null;
     return {...state, dataset:String(d.id),model:state.model || defaultModel(d.id)};
   }
+  function questionListHeading(d) {
+    const heading = pageHead('QUESTION INDEX', datasetName(d));
+    if (!has(d.description)) return heading;
+    const intro = el('p', 'lead dataset-intro');
+    // The snapshot stores plain prose. Link only supported repository URLs from that prose.
+    const repositoryUrl = /(https:\/\/(?:github\.com|huggingface\.co)\/[A-Za-z0-9_./%-]*[A-Za-z0-9_/-])/g;
+    for (const part of d.description.split(repositoryUrl)) {
+      if (part.startsWith('https://github.com/') || part.startsWith('https://huggingface.co/')) {
+        const source = el('a', '', part.replace(/^https:\/\/(?:github\.com\/|huggingface\.co\/datasets\/)/, ''));
+        source.href = part;
+        intro.append(source);
+      } else {
+        intro.append(part);
+      }
+    }
+    heading.querySelector('h1').before(intro);
+    return heading;
+  }
   function buildQuestionList(state) {
     const d = dataset(state.dataset);
     const datasetSelect = select(overview.datasets.map(x => [String(x.id),datasetName(x)]),state.dataset,'filter-dataset');
@@ -285,10 +303,9 @@
     const back = state.from === 'models' ? link('返回模型',{view:'models',model:state.model},'btn quiet') : link('返回数据集',{view:'datasets'},'btn quiet');
     const summary = record(state.dataset,state.model);
     const metrics = el('details','record-detail panel',el('summary','',el('strong','','聚合评分与来源'),el('span','muted',state.model)),
-      el('div','panel-body',readingBlock('主指标',summary?.primary),readingBlock('补充指标',summary?.secondary),readingBlock('记录版本',summary?.version),
-        has(d.description) ? disclosure('数据集说明', null, documentText(d.description)) : null));
+      el('div','panel-body',readingBlock('主指标',summary?.primary),readingBlock('补充指标',summary?.secondary),readingBlock('记录版本',summary?.version)));
     metrics.open = listView?.metrics.open ?? true;
-    content.replaceChildren(pageHead('QUESTION INDEX',datasetName(d)),selectors,metrics,
+    content.replaceChildren(questionListHeading(d),selectors,metrics,
       el('section','panel',panelHead('题目列表',has(d.metric) ? `评测指标 · ${text(d.metric)}` : null, back),form,results));
     return {scope:JSON.stringify([state.dataset,state.model,state.from]),search,verdict,results,metrics};
   }

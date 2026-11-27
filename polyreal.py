@@ -197,9 +197,11 @@ def load(root, put):
         _check_summary(summary, by_model[model])
 
     put.dataset(DATASET, 'PolyReal', '严格正确率（下界）',
-                '冻结样本共 150 题。按 Astra 统一初评标签统计：下界为正确数除以 150，'
-                '上界为正确数与不可判数之和除以 150。部分正确单列。开放题作者原生精确率和召回率未评分。'
-                '初评未经独立复核，Astra 答卷由同模型自审。')
+                f'本次评测从 PolyReal 归档题库的 {len(questions)} 道高分子题目中抽取并固定了 150 题，'
+                '涵盖问答、排序、原始图像分析、表格分析、谱图解析和实验安全。八个模型按题目要求阅读文字、图像或表格作答。'
+                'Astra 对答卷作统一初评。严格正确率以 150 题为分母，下界只计正确题，上界加上不可判题，部分正确单列。'
+                '这次初评未经独立复核，Astra 的答卷由其自评。开放题未按作者的精确率和召回率计分。'
+                '题库来源 https://huggingface.co/datasets/wanhaoliu/PolyReal')
     for model, s in summaries.items():
         versions = {r['rubric_version'] for r in by_model[model]}
         _check(len(versions) == 1, (model, '评分版本'))

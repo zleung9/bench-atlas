@@ -200,8 +200,11 @@ def _polyie(root, put):
     hashes = {}
     relation_prompt = (frozen / 'relation_system.txt').read_text(encoding='utf-8').strip()
     put.dataset('polyie', 'PolyIE', '实体严格跨度 F1 / 关系严格元组 F1',
-                '官方 Final_v2 测试集。按论文文本块评测，先做命名实体识别，再根据同一模型的标注做关系抽取。'
-                'F1 是精确率与召回率的调和平均值。两阶段分别计分，来源保留作者词元评分和宽松子串关系评分。')
+                'PolyIE 作者在 GitHub 仓库 jerry3027/PolyIE 公开了高分子材料论文的实体和关系标注。'
+                '本次采用归档版本 671a45222f1c 的 Final_v2 测试集，包含 14 篇论文的全部 97 个文本块。'
+                '模型先标出化合物名称、性质名称、性质值和条件，再根据自己的标注判断哪些实体属于同一条实验记录。'
+                '实体须匹配类型和起止位置，关系须整组匹配。两个阶段分别计算 F1（精确率与召回率的调和平均值）。'
+                '另列作者按词元计算的实体得分和按子串匹配的关系得分。来源 https://github.com/jerry3027/PolyIE')
     for sample in _jsonl(frozen / 'samples.jsonl'):
         qid = sample['id']
         ref, prompt = references[qid], public[qid]
@@ -268,11 +271,11 @@ def _chem_questions(base, put):
 
     commit = _json(base / 'source' / 'commit.json')['sha'][:12]
     put.dataset(ds, 'ChemPaperBench', '作者指标 GEval Correctness（未评分）',
-                f"公开原表共 {manifest['official_total_n']} 题，冻结其中高分子化学（Polymer Chemistry）"
-                f"{count} 题，涉及 {manifest['paper_n']} 篇论文。独立闭卷作答，模型仅收到系统提示和问题。"
-                '作者参考答案、原文摘录及图表编号仅供核对。原作者采用 DeepEval GEval 模型评审，'
-                '本批次未运行评审。完成数以冻结题数为分母。'
-                f'上游版本 ITMO-NSS-team/chempaperbench@{commit}。')
+                f"ITMO-NSS-team 在 GitHub 发布的 ChemPaperBench 收录了 {manifest['official_total_n']} 道化学论文问答题，原表未划分训练集和测试集。"
+                f"本次选取高分子化学（Polymer Chemistry）类别的全部 {count} 题，涉及 {manifest['paper_n']} 篇论文。"
+                '模型闭卷作答，只看到系统提示和问题。作者的参考答案、论文摘录及图表编号供读者核对。'
+                '本批次未运行作者的 DeepEval GEval 正确性评审，完成率以所选题目总数为分母。'
+                f'归档版本 {commit}，来源 https://github.com/ITMO-NSS-team/chempaperbench')
     source_notes = {}
     for sample in sorted(samples.values(), key=lambda row: row['position']):
         qid = sample['id']
@@ -571,10 +574,11 @@ def _matscibench(root, put):
     folder = 'MatSciBench'
     provenance = _json(root / folder / 'source/dataset_mirror_provenance.json')
     description = (
-        '从官方 test 的 1,340 题中按 Materials=Polymers 选取全部 123 题。118 道数值题，5 道公式题，'
-        '37 题附原图。数值规则相对容差 5%，零值绝对容差 10⁻¹²。公式题保留归档的规则匹配结果，'
-        '可选模型裁判未启用。参考解法来自作者，模型公开推导随原答显示。'
-        f"数据源 {provenance['upstream']}，镜像版本 {provenance['revision']}。"
+        'JunkaiZ 在 Hugging Face 发布了 MatSciBench，用于评测大学材料科学推理。'
+        '本次从测试集的 1,340 题中选取作者归为高分子（Materials=Polymers）的全部 123 题，'
+        '包括 118 道数值题和 5 道公式题，其中 37 题附有原图。数值题按作者规则判分，相对容差为 5%，'
+        '参考值为零时绝对容差为 10⁻¹²。公式题只列规则匹配结果，本次未启用可选的模型裁判。'
+        f"归档取自 hf-mirror.com 镜像（版本 {provenance['revision']}），尚未与上游站点独立核对。数据集 {provenance['upstream']}"
     )
     put.dataset('matscibench', folder, '作者规则准确率（冻结题等权）', description)
     hashes = _ms_questions(root, folder, put)
@@ -585,10 +589,11 @@ def _polycompqa(root, put):
     folder = 'PolyCompQA'
     provenance = _json(root / folder / 'source/dataset_mirror_provenance.json')
     description = (
-        '官方只发布 train 分割，冻结全部 3,653 条题目，覆盖 189 个不同文本表簇。输入为完整表格与问题，'
-        '参考值来自作者。每题等权，归档补充指标采用字符串或有限十进制精确匹配。'
-        '官方快照未提供评分器或逐步解法。待定题显示冻结得分上下界，按下界排序。'
-        f"数据源 {provenance['upstream']}，镜像版本 {provenance['revision']}。"
+        'defnecirci 在 Hugging Face 发布的 PolyCompQA 要求模型根据完整的高分子材料表格回答问题，例如读出指定样品的结晶度。'
+        '本次采用唯一公开的训练集（train），共 3,653 题，按表格内容去重后有 189 张表。'
+        '作者提供了参考值，归档中没有作者评分器或逐题解法。本次按题等权计分，字符串或有限十进制数须精确匹配，'
+        '单位保留，数值容差为零。有待定题时显示得分上下界，按下界排序。'
+        f"归档取自 hf-mirror.com 镜像（版本 {provenance['revision']}），尚未与上游站点独立核对。数据集 {provenance['upstream']}"
     )
     put.dataset('polycompqa', folder, '补充精确匹配率（冻结题等权）', description)
     hashes = _ms_questions(root, folder, put)
