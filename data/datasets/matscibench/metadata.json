@@ -1,0 +1,6 @@
+{
+  "id": "matscibench",
+  "name": "MatSciBench",
+  "metric": "作者规则准确率（冻结题等权）",
+  "description": "JunkaiZ 在 Hugging Face 发布了 MatSciBench，用于评测大学材料科学推理。本次从测试集的 1,340 题中选取作者归为高分子（Materials=Polymers）的全部 123 题，包括 118 道数值题和 5 道公式题，其中 37 题附有原图。数值题按作者规则判分，相对容差为 5%，参考值为零时绝对容差为 10⁻¹²。公式题只列规则匹配结果，本次未启用可选的模型裁判。归档取自 hf-mirror.com 镜像（版本 a8ddd710ba59818709b20f0e9cfc984aaa7a7f81），尚未与上游站点独立核对。数据集 https://huggingface.co/datasets/JunkaiZ/MatSciBench"
+}

@@ -1,0 +1,43 @@
+{
+  "dataset": "PolyIE",
+  "upstream": {
+    "host": "GitHub",
+    "namespace": "jerry3027",
+    "repository": "PolyIE",
+    "revision": "671a45222f1c53432b8b78e9630bef1f31353417",
+    "revision_evidence": "Archived repository and commit metadata"
+  },
+  "split": {
+    "source": "Final_v2 test",
+    "source_count": 97,
+    "unit": "published token chunk",
+    "frozen_count": 97,
+    "sampling": "All test chunks in the v2 split used by the authors' model evaluation code, in manifest order. All input tokens are retained.",
+    "frozen_documents": 14,
+    "frozen_tokens": 44755,
+    "frozen_reference_relations": 528,
+    "frozen_inputs_sha256": "b78033a8c1158585e21d3888c0673a53cf1014e51aff89b1b9c650925f291fb7",
+    "frozen_references_sha256": "95ea2dc404e8a140a41943b93f8ac3dadde0f36716545659dc8c23761c4c2631"
+  },
+  "scoring": {
+    "procedure": "Zero-shot named entity recognition, followed by relation extraction conditioned on that model's predicted entities.",
+    "author_entity_metric": "Token precision, recall and F1 by entity type",
+    "author_entity_smoothing": 0.01,
+    "author_relation_metric": "Substring tuple matching where reported. This legacy rule can skip empty predictions and reuse matches.",
+    "supplemental_entity_metric": "Exact typed entity span F1",
+    "supplemental_relation_metric": "Exact one-to-one span tuple F1",
+    "aggregate": "The archive reports F1 for each stage from matched, extra and missed entities or tuples within its reported scoring scope. The board ranks by strict entity span F1 when a complete scope is available."
+  },
+  "run_batches": [
+    {"role": "seven_model_summary", "summary_snapshot": "20261120T235054+0800", "answer_snapshots": ["external6_20261119", "external6_20261120_update"], "model_count": 7, "model_chunk_records": 679},
+    {"role": "accepted_continuation", "report_date": "2026-11-26", "model": "gemini-3.8-flash-high", "protocol": "external6-agy-1.5.15-print-single-generation-v1", "stages": [{"stage": "ner", "planned_records": 97, "valid_records": 34}, {"stage": "re", "planned_records": 97, "valid_records": 23}]}
+  ],
+  "rights": {
+    "scope": "Archived upstream repository",
+    "status": "declared",
+    "declared_license": "Apache-2.0",
+    "license_file_found": true,
+    "explicit_redistribution_prohibition_found": false,
+    "evidence": "The archived repository includes the Apache License, Version 2.0. Its redistribution conditions apply to covered material."
+  }
+}

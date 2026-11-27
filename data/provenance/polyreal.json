@@ -1,0 +1,49 @@
+{
+  "dataset": "PolyReal",
+  "upstream": {
+    "host": "Hugging Face",
+    "namespace": "wanhaoliu",
+    "repository": "PolyReal",
+    "revision": "094c6f6c8bcd24ce12f4ffaefca2527003413a18",
+    "revision_evidence": "The main question collection and train split in the archive match the Git blob IDs at this revision on the Hugging Face mirror.",
+    "question_collection_sha256": "0ed7a74be1c7145579b5a403000c72af164302e5092dcb2c69cb2086f6f45189"
+  },
+  "split": {
+    "source": "train",
+    "source_count": 545,
+    "unit": "question",
+    "frozen_count": 150,
+    "sampling": "Seeded pilot. All eight models used the same questions in the same frozen order.",
+    "sampling_seed": 20261113,
+    "frozen_task_counts": {"qa": 126, "rank": 9, "safe": 5, "spectrum": 4, "raw": 3, "table": 3},
+    "frozen_input_counts": {"image": 99, "text": 48, "csv": 3}
+  },
+  "scoring": {
+    "procedure": "Astra reviewed answers against the questions, supplied materials, author references and review criteria. The five-model batch retained its prior reviews. The three-model batch received a full review of each valid answer.",
+    "rubric_version": "unified_ai_initial_content_v1",
+    "rubric_sha256": "19147d5a1e1dfccd173e8457f6c624df1bb07d5e76174a524943741d31a29781",
+    "categories": {"C": "correct", "P": "partially correct", "E": "incorrect", "N": "no valid answer", "U": "indeterminate"},
+    "item_numeric_scores_assigned": false,
+    "strict_accuracy_lower": "C divided by 150 per model",
+    "strict_accuracy_upper": "The sum of C and U divided by 150 per model",
+    "independent_review": false,
+    "self_reviewed_model": "Astra",
+    "author_open_answer_precision_recall_run": false
+  },
+  "run_batches": [
+    {"role": "five_model_review", "review_snapshot": "20261115T092935+0800", "models": ["Astra", "Gemini", "Luna", "Sol", "Terra"], "reviewed_records": 750},
+    {"role": "three_model_extension", "review_snapshot": "20261116T164213+0800", "models": ["DeepSeek", "Qwen", "Sage"], "reviewed_records": 450}
+  ],
+  "rights": {
+    "scope": "Archived dataset package",
+    "status": "undetermined",
+    "declared_license": null,
+    "license_file_found": false,
+    "explicit_redistribution_prohibition_found": false,
+    "evidence": "The dataset card and file inventory for the wanhaoliu release were checked via the Hugging Face mirror. The card has no license field or redistribution restriction.",
+    "related_releases": [
+      {"host": "GitHub", "namespace": "wanhaoliu", "repository": "PolyReal", "revision": "302562d39d7099bc12990a56221243522d7a6ede", "readme_badge": "Apache-2.0", "license_file_found": false, "scope_note": "The code repository asks for a final license file and points to the weidawang data package."},
+      {"host": "Hugging Face", "namespace": "weidawang", "repository": "PolyReal", "revision": "aa4c596f1b5a3dd16eb10fff8a842f44bcc459d1", "card_license": "Apache-2.0", "license_file_found": false, "scope_note": "The license field identifies the separately packaged Parquet release. Its applicability to the archived package is unverified."}
+    ]
+  }
+}

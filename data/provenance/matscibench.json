@@ -1,0 +1,41 @@
+{
+  "dataset": "MatSciBench",
+  "upstream": {
+    "host": "Hugging Face",
+    "namespace": "JunkaiZ",
+    "repository": "MatSciBench",
+    "revision": "a8ddd710ba59818709b20f0e9cfc984aaa7a7f81",
+    "revision_evidence": "Archived mirror provenance",
+    "evaluation_code": {"host": "GitHub", "namespace": "Jun-Kai-Zhang", "repository": "MatSciBench", "revision": "042be2852ea6005a021d03f6501b0a56349bbda0"}
+  },
+  "split": {
+    "source": "test",
+    "source_count": 1340,
+    "unit": "question",
+    "frozen_count": 123,
+    "sampling": "All questions with the exact Materials value Polymers, in manifest order. The separate Elastomers category falls outside this selection.",
+    "frozen_type_counts": {"NUM": 118, "FORMULA": 5},
+    "questions_with_images": 37,
+    "frozen_inputs_sha256": "b1eccc8fc630753671c13d301bebcbedc80daf9948d85de3747adf9a5871078e",
+    "frozen_references_sha256": "a7e9762eb670a97a48bb92f13b55a0c5649dbeee358d3de9e593bc9c5704c6e1"
+  },
+  "scoring": {
+    "procedure": "The author base condition supplies original embedded images where present. The author rule compares extracted final answers. Formula items retain the archived rule result.",
+    "numeric_relative_tolerance": 0.05,
+    "zero_reference_absolute_tolerance": 1e-12,
+    "optional_formula_model_judge_run": false,
+    "item_scores": [0, 1],
+    "aggregate": "Correct items divided by 123 per model. Archived scored failures retain their rule result."
+  },
+  "run_batches": [
+    {"role": "seven_model_summary", "summary_snapshot": "20261120T235054+0800", "answer_snapshots": ["external6_20261119"], "model_count": 7, "model_question_records": 861}
+  ],
+  "rights": {
+    "scope": "Archived dataset and evaluation repository",
+    "status": "undeclared",
+    "declared_license": null,
+    "license_file_found": false,
+    "explicit_redistribution_prohibition_found": false,
+    "evidence": "The archived dataset card and repository documentation give no data license. The archived repository tree lists no license file."
+  }
+}

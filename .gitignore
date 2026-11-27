@@ -1,9 +1,10 @@
-# Local archives and generated snapshots
+# Internal raw archives and temporary databases. Ship the canonical preview snapshot.
 /source/
 /source-refresh.*/
-/release/
+/release/*
 *.sqlite
 *.sqlite-*
+!/release/board.sqlite
 
 # Local browser previews and caches
 /overview.png

@@ -35,14 +35,14 @@
 
 ## 怎样验证改动
 
-以下命令从仓库根目录运行。公开仓库包含源码与离线依赖。完整数据验收需要本地归档和由其构建的快照，获取与构建步骤见 [README](README.md)。提交前检查暂存区，原始归档、模型回执、生成的 SQLite 快照、截图和凭据保存在仓库外或已忽略的位置。
+从仓库根目录运行验收。数据库随源码提交。学生编辑 `data/datasets/` 中的文本，按需添加题图和来源材料，使用 `python3 data_bundle.py build` 重建快照，再运行 `python3 data_bundle.py check` 核对所有记录。数据与快照在同一份拉取请求中审查，步骤见[学生贡献指南](CONTRIBUTING.md)。原始提供商日志和凭据保留在内部归档。
 
 ```bash
 # 已有快照时，在一个终端启动本机预览
 python3 server.py --port 18176
 
 # 在另一终端运行接口验收和真实浏览器验收
-python3 verify_release.py http://127.0.0.1:18176/ --source ./source
+python3 verify_release.py http://127.0.0.1:18176/
 node check_browser.mjs http://127.0.0.1:18176/
 ```
 

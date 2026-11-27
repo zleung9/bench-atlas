@@ -1,0 +1,6 @@
+{
+  "id": "chempaperbench",
+  "name": "ChemPaperBench",
+  "metric": "作者指标 GEval Correctness（未评分）",
+  "description": "ITMO-NSS-team 在 GitHub 发布的 ChemPaperBench 收录了 377 道化学论文问答题，原表未划分训练集和测试集。本次选取高分子化学（Polymer Chemistry）类别的全部 65 题，涉及 6 篇论文。模型闭卷作答，只看到系统提示和问题。作者的参考答案、论文摘录及图表编号供读者核对。本批次未运行作者的 DeepEval GEval 正确性评审，完成率以所选题目总数为分母。归档版本 20c16467fba4，来源 https://github.com/ITMO-NSS-team/chempaperbench"
+}

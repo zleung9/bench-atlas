@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "version": "2026-11-26",
+  "datasets": [
+    "polyreal",
+    "matscibench",
+    "polycompqa",
+    "chempaperbench",
+    "polyie"
+  ]
+}

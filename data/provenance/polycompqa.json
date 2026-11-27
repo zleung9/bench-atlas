@@ -1,0 +1,40 @@
+{
+  "dataset": "PolyCompQA",
+  "upstream": {
+    "host": "Hugging Face",
+    "namespace": "defnecirci",
+    "repository": "PolyCompQA",
+    "revision": "d60468f89359bd1a49a25469d98482448ccaa1ca",
+    "revision_evidence": "Archived mirror provenance"
+  },
+  "split": {
+    "source": "train",
+    "source_count": 3653,
+    "unit": "question",
+    "frozen_count": 3653,
+    "sampling": "All rows from the sole published split, in manifest order. Each question uses the complete text table.",
+    "table_clusters": 189,
+    "frozen_inputs_sha256": "90e360991d196e835d8d4cc027b3d768258349bc2075efacdda27a3f3e32d4e3",
+    "frozen_references_sha256": "055110eb1225dae67b2ee0f2a413d01286de5cb16ca9d47098a62b1bbe86b51e"
+  },
+  "scoring": {
+    "procedure": "The archive supplies a zero-shot evaluation and a supplemental exact-match rule. A match requires equal strings or equal finite decimal values. Units are retained.",
+    "author_scorer_present": false,
+    "numeric_tolerance": 0,
+    "item_scores": [0, 1],
+    "unscored_item_value": null,
+    "aggregate": "The lower bound divides observed correct by 3653 per model. The upper bound includes pending items. The conditional rate uses valid scored responses."
+  },
+  "run_batches": [
+    {"role": "seven_model_summary", "summary_snapshot": "20261120T235054+0800", "answer_snapshots": ["external6_20261119", "external6_20261120_update"], "model_count": 7, "model_question_records": 25571},
+    {"role": "accepted_continuation", "report_date": "2026-11-26", "model": "gemini-3.8-flash-high", "protocol": "external6-agy-1.5.15-print-single-generation-v1", "stage": "answer", "planned_records": 1026, "valid_records": 993}
+  ],
+  "rights": {
+    "scope": "Published dataset",
+    "status": "declared",
+    "declared_license": "MIT",
+    "license_file_found": false,
+    "explicit_redistribution_prohibition_found": false,
+    "evidence": "The archived Hugging Face dataset card declares MIT. The archived repository inventory lists no separate license file."
+  }
+}

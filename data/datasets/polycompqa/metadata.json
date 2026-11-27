@@ -1,0 +1,6 @@
+{
+  "id": "polycompqa",
+  "name": "PolyCompQA",
+  "metric": "补充精确匹配率（冻结题等权）",
+  "description": "defnecirci 在 Hugging Face 发布的 PolyCompQA 要求模型根据完整的高分子材料表格回答问题，例如读出指定样品的结晶度。本次采用唯一公开的训练集（train），共 3,653 题，按表格内容去重后有 189 张表。作者提供了参考值，归档中没有作者评分器或逐题解法。本次按题等权计分，字符串或有限十进制数须精确匹配，单位保留，数值容差为零。有待定题时显示得分上下界，按下界排序。归档取自 hf-mirror.com 镜像（版本 d60468f89359bd1a49a25469d98482448ccaa1ca），尚未与上游站点独立核对。数据集 https://huggingface.co/datasets/defnecirci/PolyCompQA"
+}

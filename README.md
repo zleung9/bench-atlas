@@ -4,7 +4,24 @@
 
 开发和维护前，请先阅读[智能体维护指南](AGENTS.md)，了解五套题库的评分口径、原生字段以及题目页的交互约定。
 
-## 数据与更新
+## 下载到本机预览
+
+仓库附带可直接运行的 [SQLite 数据库](release/board.sqlite) 和按数据集整理的[构建输入](data/datasets/)。安装 Python 3.9 或更高版本即可预览。
+
+```bash
+git clone https://github.com/zleung9/bench-atlas.git
+cd bench-atlas
+python3 server.py --port 18176
+```
+
+在浏览器打开 <http://127.0.0.1:18176/>。新增题库、为已有题库录入新模型结果、重建快照及提交拉取请求的步骤见[学生贡献指南](CONTRIBUTING.md)。构建输入包含题库说明、题目、作者参考、按模型分开的答卷和汇总成绩。题图按内容摘要去重。各题库的来源与评测批次见[来源记录](data/provenance/)。
+
+```bash
+python3 data_bundle.py build   # 从仓库文件重建数据库
+python3 data_bundle.py check   # 核对快照与所有构建输入
+```
+
+## 维护者从原始运行归档导入历史批次
 
 原始材料位于 `hpc:/polymer-multi-modal/Benchmark/`。每项成绩保留来源批次，空字段保留为空。当前导入器读取四个冻结评测集的 20261120 归档及相应的 20261126 Gemini 续测，以及 PolyReal 汇总表和逐题判定。新增批次文件名或格式变更时，先更新对应导入器中的批次映射，再核对统计口径。已有来源追加字段时，也应确认到网页字段的映射。
 

@@ -1,0 +1,40 @@
+{
+  "dataset": "ChemPaperBench",
+  "upstream": {
+    "host": "GitHub",
+    "namespace": "ITMO-NSS-team",
+    "repository": "chempaperbench",
+    "revision": "20c16467fba42ca59991d83efc0043196cc6d907",
+    "revision_evidence": "Archived repository and commit metadata"
+  },
+  "split": {
+    "source": "unsplit",
+    "source_count": 377,
+    "unit": "question",
+    "frozen_count": 65,
+    "sampling": "All rows with category Polymer Chemistry from the published table, in manifest order.",
+    "frozen_papers": 6,
+    "frozen_level_counts": {"L1": 41, "L2": 14, "L3": 10},
+    "frozen_inputs_sha256": "aa85303138c320ef5b557bc606f8d731d61ac63b0597a0dd8cb52b95c6017911",
+    "frozen_references_sha256": "d78d2e8f51e3889be5e39397994ec46323dd8eea68f4c3f4dfdf6fc765c1eeaa"
+  },
+  "scoring": {
+    "condition": "Standalone, closed book",
+    "author_procedure": "DeepEval GEval Correctness",
+    "author_judge_run": false,
+    "content_score": null,
+    "aggregate": "The archive reports operational completion against 65 questions per model. Completed answers remain unscored for content."
+  },
+  "run_batches": [
+    {"role": "seven_model_summary", "summary_snapshot": "20261120T235054+0800", "answer_snapshots": ["external6_20261119", "external6_20261120_update"], "model_count": 7, "model_question_records": 455},
+    {"role": "accepted_continuation", "report_date": "2026-11-26", "model": "gemini-3.8-flash-high", "protocol": "external6-agy-1.5.15-print-single-generation-v1", "stage": "answer", "planned_records": 65, "valid_records": 60}
+  ],
+  "rights": {
+    "scope": "Archived repository and dataset",
+    "status": "undeclared",
+    "declared_license": null,
+    "license_file_found": false,
+    "explicit_redistribution_prohibition_found": false,
+    "evidence": "The archived repository documentation gives no data license. The archived repository tree lists no license file."
+  }
+}
