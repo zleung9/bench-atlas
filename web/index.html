@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123e43">
+  <title>衡台 · 科学评测工作台</title>
+  <link rel="stylesheet" href="./vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./vendor/markdown-it/markdown-it.min.js" defer></script>
+  <script src="./vendor/katex/katex.min.js" defer></script>
+  <script src="./vendor/katex/mhchem.min.js" defer></script>
+  <script src="./rich.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">跳到主要内容</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="评测工作台">
+      <a class="brand" href="#view=overview" aria-label="衡台，返回评测总览">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-type"><strong>衡台</strong><small lang="en">BENCH ATLAS</small></span>
+      </a>
+      <div class="nav-label">工作空间</div>
+      <nav id="nav" aria-label="工作空间">
+        <a data-nav="overview" href="#view=overview"><span class="nav-symbol tiles" aria-hidden="true"></span>评测总览</a>
+        <a data-nav="datasets" href="#view=datasets"><span class="nav-symbol layers" aria-hidden="true"></span>数据集</a>
+        <a data-nav="models" href="#view=models"><span class="nav-symbol models" aria-hidden="true"></span>模型</a>
+        <a data-nav="versions" href="#view=versions"><span class="nav-symbol history" aria-hidden="true"></span>来源与版本</a>
+      </nav>
+      <footer class="sidebar-foot"><span>数据版本</span><strong class="mono" id="sidebar-version">—</strong></footer>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="crumb">评测工作台 <span aria-hidden="true">/</span> <strong id="breadcrumb">总览</strong></div><a href="#view=versions" class="version-link"><span>版本</span> <span id="top-version" class="mono">—</span></a></header>
+      <main id="main" tabindex="-1"><div id="content"><noscript><p class="notice">请启用 JavaScript 以读取评测记录。</p></noscript></div></main>
+    </div>
+  </div>
+  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

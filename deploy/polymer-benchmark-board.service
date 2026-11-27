@@ -1,0 +1,21 @@
+[Unit]
+Description=Polymer Benchmark Board
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+WorkingDirectory=/opt/polymer-benchmark-board/current
+ExecStart=/usr/bin/python3 -B /opt/polymer-benchmark-board/current/server.py --bind 10.13.13.2 --port 18175
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_INET AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

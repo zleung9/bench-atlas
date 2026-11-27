@@ -1,0 +1,15 @@
+# Local archives and generated snapshots
+/source/
+/source-refresh.*/
+/release/
+*.sqlite
+*.sqlite-*
+
+# Local browser previews and caches
+/overview.png
+/detail-preview.png
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
