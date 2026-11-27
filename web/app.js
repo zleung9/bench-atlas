@@ -425,10 +425,10 @@
         solution = solution.slice(0, checklist.index);
       }
     }
-    if (reference.trim()) blocks.push(docSection(ds === 'polyie' ? '作者实体与关系标注' : '作者参考答案', documentText(reference)));
+    if (reference.trim()) blocks.push(docSection(ds === 'polyie' ? '作者实体与关系标注（原生）' : '作者参考答案（原生）', documentText(reference)));
     if (extra) blocks.push(extra);
     if (solution.trim()) {
-      const title = {chempaperbench:'论文出处与作者标注的原文（供核对）', polyreal:'作者参考要点'}[ds] || '作者解题过程';
+      const title = {chempaperbench:'论文出处与作者标注的原文（供核对）', polyreal:'作者参考要点（原生）'}[ds] || '作者解题过程';
       blocks.push(docSection(title, documentText(ds === 'polyreal' ? solution.replace(/^作者参考要点\n/, '') : solution)));
     }
     let label = reference.trim() ? '原生参考答案' : '原生参考资料';
