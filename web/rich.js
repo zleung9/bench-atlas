@@ -77,10 +77,46 @@
     return false;
   }
 
+  // Review excerpts can quote just the body of a display equation. MatSciBench's
+  // judge also stores comparison operands and Python-repr numeric candidates.
+  function reviewMath(state, silent) {
+    if (!state.env?.review) return false;
+    const { src, pos, posMax } = state;
+    const lineStart = pos === 0 || src[pos - 1] === '\n';
+    if (!lineStart && !src.startsWith(', Answer #', pos)) return false;
+    const end = src.indexOf('\n', pos);
+    const line = src.slice(pos, Math.min(end < 0 ? posMax : end, posMax));
+    if (line.length > MAX_FORMULA) return false;
+    let prefix = '', raw, tex;
+    const candidate = /^(Rule judge for NUM [^'\n]*?candidate=')([^'\n]+)(?=', parsed model=)/.exec(line);
+    const comparison = /^(?:(?:Some answers don't match: |, )?Answer(?: #\d+)?: )([^≠]+?)(?= ≠ )/.exec(line);
+    if (candidate && candidate[2].includes('\\\\')) {
+      prefix = candidate[1]; raw = candidate[2]; tex = raw.replace(/\\\\/g, '\\');
+    } else if (comparison && /\\[a-zA-Z]+/.test(comparison[1]) && !/[$`]|\\[()[\]]/.test(comparison[1])) {
+      raw = tex = comparison[1]; prefix = comparison[0].slice(0, -raw.length);
+    } else {
+      // Only infer math on a whole formula line. Leave prose, code, URLs and
+      // already-delimited expressions to the standard Markdown/math rules.
+      if (!/\\[a-zA-Z]+/.test(line) || /[$`:]|<\/?[a-z][\w-]*\b[^>]*>|\\[()[\]]/i.test(line)) return false;
+      const notation = line.replace(/\\(?:text|mathrm|operatorname)\{[^{}]*\}/g, '').replace(/\\[A-Za-z]+/g, '');
+      if (/[^\x20-\x7e]|[A-Za-z]{4,}/.test(notation)) return false;
+      raw = tex = line;
+    }
+    if (!silent) {
+      state.pending += prefix;
+      const token = state.push('bench_math', '', 0);
+      token.content = tex;
+      token.meta = { raw, display: false };
+    }
+    state.pos += prefix.length + raw.length;
+    return true;
+  }
+
   const md = window.markdownit?.({ html: false, linkify: false, typographer: false, maxNesting: 32 });
   if (md) {
     // Leave the complete spelling of links and images visible and inert.
     md.disable(['link', 'image', 'autolink', 'reference']);
+    md.inline.ruler.before('text', 'bench_review_math', reviewMath);
     md.inline.ruler.before('escape', 'bench_math', inlineMath);
     md.block.ruler.before('fence', 'bench_math_block', blockMath, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
   }
@@ -156,7 +192,7 @@
     }
   }
 
-  function render(value) {
+  function render(value, options = {}) {
     const root = element('div');
     root.className = 'bench-rich';
     if (value !== null && typeof value === 'object') {
@@ -165,7 +201,7 @@
     }
     const text = String(value ?? '');
     if (!md || text.length > MAX_DOCUMENT) root.append(literalBlock(text));
-    else appendTokens(root, md.parse(text, {}));
+    else appendTokens(root, md.parse(text, options));
     return root;
   }
 

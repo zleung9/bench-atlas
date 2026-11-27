@@ -218,6 +218,19 @@ try {
       const shot = await rpc('Page.captureScreenshot',{format:'png'});
       await writeFile(process.env.BOARD_DETAIL_SCREENSHOT,Buffer.from(shot.data,'base64'));
     }
+    for (const [ds,id,formula] of [
+      ['polyreal','144', String.raw`x=\frac{b^2}{cZ+2b}.`],
+      ['matscibench','Fundamentals_of_Materials_Instructors_Example 4.9', String.raw`(2.69\times 10^3,\ 22.5)`],
+      ['matscibench','Mechanical_Behavior_of_Materials_Hosford_mechanical behaviors Example 3.5', String.raw`T=\frac{2}{3}\pi R^3 \tau`]
+    ]) {
+      await navigateToQuestion(ds,id,deepseek);
+      await waitPage(`(()=>{
+        const fold=[...document.querySelectorAll('.answer-card details')].find(d=>d.querySelector('summary')?.textContent.includes('判定依据与评审记录'));
+        if (!fold) return false;
+        fold.open = true;
+        return [...fold.querySelectorAll('.katex annotation')].some(a=>a.textContent===${JSON.stringify(formula)});
+      })()`,`${ds} review evidence renders ${formula}`);
+    }
     await navigateToQuestion('polyreal','525','gpt-6-luna');
     await waitPage('!!document.querySelector(".answer-card table th")','real model answer rendered as a Markdown table');
   }

@@ -351,7 +351,7 @@
     pre.setAttribute('aria-label', label);
     return pre;
   }
-  function documentText(value) {
+  function documentText(value, options) {
     const source = text(value, '');
     const lines = source.trim().split(/\r?\n/);
     if (lines.length > 1 && lines.slice(1).every(line => /^\s*[-+]?(?:\d|\.\d)[\d.eE+\- ]*(?:,|\t)/.test(line))) {
@@ -359,7 +359,7 @@
     }
     const body = el('div', 'document-text');
     try {
-      const rendered = window.BenchRich?.render(source);
+      const rendered = window.BenchRich?.render(source, options);
       if (rendered instanceof Node) { body.append(rendered); return body; }
     } catch { /* Keep every character accessible if a renderer cannot handle this record. */ }
     body.classList.add('prose');
@@ -567,7 +567,7 @@
     if (has(data.answer) && text(data.answer).trim()) output.append(documentText(data.answer));
     else output.append(el('p', 'answer-missing', '无作答正文 · 此记录未归档模型输出。'));
     card.append(output, reasoning);
-    const evidence = has(data.basis) ? documentText(data.basis) : el('p', 'muted', '此记录未提供判定依据。');
+    const evidence = has(data.basis) ? documentText(data.basis, { review: true }) : el('p', 'muted', '此记录未提供判定依据。');
     card.append(disclosure('判定依据与评审记录', !has(data.basis) ? '未提供依据' : null, evidence,
       el('p', 'record-version', `记录版本 · ${text(data.version, '未提供')}`)));
     return card;
