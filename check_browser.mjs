@@ -25,8 +25,21 @@ try {
   const waitPage=(test,why)=>until(()=>evaluate(test),why);
   await rpc('Runtime.enable');await rpc('Page.enable');
   await rpc('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
-  await rpc('Page.navigate',{url:site});
-  await waitPage('document.querySelectorAll(".matrix tbody tr").length===8','8 overview rows');
+  const catalogVisible = `location.hash === '#view=datasets' && document.querySelector('#content h1')?.textContent === '数据集' && document.querySelectorAll('.catalog-card').length === 5`;
+  await rpc('Page.navigate',{url:new URL('#view=models&model=deepseek-v4.1-flash',site).href});
+  await waitPage(catalogVisible,'saved model link opens the dataset catalog');
+  for (const nav of ['models','datasets']) {
+    await evaluate(`document.querySelector('[data-nav="overview"]').click()`);
+    await waitPage('document.querySelectorAll(".matrix tbody tr").length===8','overview before sidebar click');
+    await evaluate(`document.querySelector('[data-nav="${nav}"]').click()`);
+    await waitPage(catalogVisible,`${nav} sidebar entry opens the dataset catalog`);
+  }
+  await evaluate(`location.hash='view=overview'`);
+  await waitPage('document.querySelectorAll(".matrix tbody tr").length===8','overview before legacy navigation');
+  await evaluate(`location.hash='view=models'`);
+  await waitPage(catalogVisible,'legacy model directory resolves to the catalog');
+  await evaluate('history.back()');
+  await waitPage(`location.hash === '#view=overview' && document.querySelectorAll('.matrix tbody tr').length===8`,'back skips the old model URL');
   if(process.argv[3]){const shot=await rpc('Page.captureScreenshot',{format:'png'});await writeFile(process.argv[3],Buffer.from(shot.data,'base64'));}
   await evaluate('document.querySelector(\'[data-key="ds:polyreal"]\').click()');
   await waitPage('document.querySelector(".matrix tbody tr th").textContent.includes("gpt-6.1-sol")','PolyReal descending sort');

@@ -5,7 +5,7 @@
   const main = $('#main');
   const content = $('#content');
   const views = new Map(Object.entries({
-    overview: '总览', datasets: '数据集', models: '模型', versions: '来源与版本',
+    overview: '总览', datasets: '数据集', versions: '来源与版本',
     questions: '题目列表', detail: '逐题核查'
   }));
   const collator = new Intl.Collator('zh-CN', { numeric: true });
@@ -42,7 +42,11 @@
     return '#' + params.toString();
   }
   function currentRoute() {
-    const p = new URLSearchParams(location.hash.slice(1));
+    let p = new URLSearchParams(location.hash.slice(1));
+    if (p.get('view') === 'models') {
+      p = new URLSearchParams({view:'datasets'});
+      history.replaceState(null, '', '#' + p.toString());
+    }
     const state = {};
     for (const key of ['view','dataset','model','from','qid','q','verdict','sort','dir','compare']) state[key] = p.get(key) || '';
     state.view = state.view || (state.qid ? 'detail' : 'overview');
@@ -101,7 +105,7 @@
     return { view:'questions', from, dataset:String(ds), model: model || defaultModel(ds) };
   }
   function activeNav(state) {
-    if (state.view === 'detail' || state.view === 'questions') return state.from === 'models' ? 'models' : 'datasets';
+    if (state.view === 'detail' || state.view === 'questions') return 'datasets';
     return state.view;
   }
   function updateChrome(state) {
@@ -193,7 +197,7 @@
     const head = el('tr', '', column('name','模型'), datasets.map(d => column('ds:'+d.id, datasetName(d), d.metric)));
     const body = el('tbody');
     for (const model of ordered) {
-      const rowName = el('th', '', link([mark(model),el('span','',model)], {view:'models',model}, 'model-name')); rowName.scope = 'row';
+      const rowName = el('th', '', link([mark(model),el('span','',model)], {view:'datasets'}, 'model-name')); rowName.scope = 'row';
       body.append(el('tr', '', rowName, datasets.map(d => el('td', dsKey === String(d.id) ? 'active-column' : '', scoreLink(d.id, model, record(d.id, model))))));
     }
     const table = el('table', 'matrix', el('caption','sr-only','按模型和数据集列示的原始指标'), el('thead','',head), body);
@@ -223,17 +227,6 @@
   }
   function datasetsPage() {
     return [pageHead('DATASET INDEX','数据集','按数据集查看指标口径和题目记录。'), datasetCards(overview.datasets)];
-  }
-  function modelsPage(state) {
-    if (state.model) {
-      if (!overview.models.includes(state.model)) return [empty('未找到该模型',null,link('返回模型目录',{view:'models'},'btn'))];
-      return [link('返回模型目录',{view:'models'},'btn quiet'),pageHead('MODEL PROFILE',state.model,'选择数据集，查看这个模型的作答和评判记录。'),datasetCards(overview.datasets,state.model,'models')];
-    }
-    const modelCards = overview.models.map(model => {
-      const n = overview.datasets.filter(d => has(record(d.id, model)?.primary)).length;
-      return link([mark(model),el('h3','',model),el('div','catalog-meta',`已提供主指标的数据集 ${count(n)} / ${count(overview.datasets.length)}`)],{view:'models',model},'catalog-card');
-    });
-    return [pageHead('MODEL INDEX','模型','选择模型，再按数据集核查其评分。'),modelCards.length ? el('div','catalog-grid',modelCards) : empty('暂无模型')];
   }
   function versionsPage() {
     const rows = overview.scores.map(s => el('tr','', el('th','',text(s.model)),el('td','',datasetName(dataset(String(s.dataset))) === '—' ? text(s.dataset) : datasetName(dataset(String(s.dataset)))),
@@ -300,7 +293,7 @@
     search.addEventListener('compositionstart',()=>clearTimeout(searchTimer));
     search.addEventListener('input',e=>{ if (!e.isComposing) scheduleSearch(); });
     search.addEventListener('compositionend',scheduleSearch);
-    const back = state.from === 'models' ? link('返回模型',{view:'models',model:state.model},'btn quiet') : link('返回数据集',{view:'datasets'},'btn quiet');
+    const back = link('返回数据集',{view:'datasets'},'btn quiet');
     const summary = record(state.dataset,state.model);
     const metrics = el('details','record-detail panel',el('summary','',el('strong','','聚合评分与来源'),el('span','muted',state.model)),
       el('div','panel-body',readingBlock('主指标',summary?.primary),readingBlock('补充指标',summary?.secondary),readingBlock('记录版本',summary?.version)));
@@ -638,7 +631,7 @@
     const {signal} = controller;
     const old = route;
     route = currentRoute(); const state = route;
-    const sectionChanged = !old || old.view !== state.view || old.dataset !== state.dataset || old.qid !== state.qid || (state.view==='models' && old.model!==state.model);
+    const sectionChanged = !old || old.view !== state.view || old.dataset !== state.dataset || old.qid !== state.qid;
     const focusId = document.activeElement?.id;
     const sortFocus = document.activeElement?.dataset?.key;
     if (state.view !== 'questions') listView = null;
@@ -651,7 +644,6 @@
       switch(state.view) {
         case 'overview': content.replaceChildren(...overviewPage(state)); break;
         case 'datasets': content.replaceChildren(...datasetsPage()); break;
-        case 'models': content.replaceChildren(...modelsPage(state)); break;
         case 'versions': content.replaceChildren(...versionsPage()); break;
         case 'questions': await questionsPage(state,id,signal,!sectionChanged && old?.page !== state.page && old?.q === state.q && old?.verdict === state.verdict); break;
         case 'detail': await detailPage(state,id,signal,true); break;
