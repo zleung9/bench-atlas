@@ -8,6 +8,8 @@ import re
 import sqlite3
 from urllib.parse import parse_qs, urlsplit
 
+import agent_api
+
 BASE = Path(__file__).resolve().parent
 PAGE_SIZE = 30
 STATIC = {'/': ('index.html', 'text/html'), '/index.html': ('index.html', 'text/html'),
@@ -92,6 +94,17 @@ class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self.do_GET()
 
+    def reject_write(self):
+        self.send_response(405)
+        self.send_header('Allow', 'GET, HEAD')
+        body = b'{"error":"Read-only service. Use GET or HEAD."}'
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    do_POST = do_PUT = do_PATCH = do_DELETE = reject_write
+
     def do_GET(self):
         try:
             url = urlsplit(self.path)
@@ -101,9 +114,14 @@ class Handler(BaseHTTPRequestHandler):
             if url.path in VENDOR:
                 path, mime = VENDOR[url.path]
                 return self.respond(200, mime, path.read_bytes())
-            if url.path not in ('/api/overview', '/api/questions', '/api/detail', '/health') and not re.fullmatch(r'/media/[a-f0-9]{64}(?:\.(?:png|jpg|webp))?', url.path):
+            is_v1 = url.path == '/api/v1' or url.path.startswith('/api/v1/')
+            if is_v1 and url.path == '/api/v1/openapi.json':
+                if url.query:
+                    raise ValueError('Unexpected query parameters')
+                return self.respond(200, 'application/json; charset=utf-8', (BASE/'openapi.json').read_bytes())
+            if not is_v1 and url.path not in ('/api/overview', '/api/questions', '/api/detail', '/health') and not re.fullmatch(r'/media/[a-f0-9]{64}(?:\.(?:png|jpg|webp))?', url.path):
                 raise LookupError('未找到页面')
-            query = parse_qs(url.query, max_num_fields=12)
+            query = parse_qs(url.query, keep_blank_values=is_v1, max_num_fields=12)
             def get(k):
                 return query.get(k, [''])[0]
             with closing(sqlite3.connect(self.server.db_uri, uri=True)) as db:
@@ -114,7 +132,9 @@ class Handler(BaseHTTPRequestHandler):
                     if not img:
                         raise LookupError('未找到题图')
                     return self.respond(200, img[0], img[1], 'private, max-age=31536000, immutable')
-                if url.path == '/health':
+                if is_v1:
+                    data = agent_api.dispatch(db, url.path, query, self.server.provenance)
+                elif url.path == '/health':
                     data = {'status':'ok', 'version': db.execute('SELECT version FROM metadata').fetchone()[0]}
                 elif url.path == '/api/overview':
                     data = overview(db)
@@ -127,8 +147,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         except LookupError as exc:
             self.json(404, {'error':str(exc)})
-        except (ValueError, OverflowError):
-            self.json(400, {'error':'无效的请求参数'})
+        except (ValueError, OverflowError) as exc:
+            self.json(400, {'error':str(exc) or '无效的请求参数'})
         except (OSError, sqlite3.Error):
             self.log_error('快照或页面读取失败')
             self.json(503, {'error':'暂时无法读取已发布的快照'})
@@ -139,10 +159,18 @@ if __name__ == '__main__':
     parser.add_argument('--bind', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=18175)
     parser.add_argument('--db', type=Path, default=BASE/'release'/'board.sqlite')
+    parser.add_argument('--provenance', type=Path, help='Matching per-dataset provenance directory for a custom snapshot')
     args = parser.parse_args()
     if not args.db.is_file():
         parser.error('需先构建数据快照')
     server = ThreadingHTTPServer((args.bind,args.port), Handler)
     server.db_uri = args.db.resolve().as_uri() + '?mode=ro&immutable=1'
+    directory = args.provenance
+    if directory is None and args.db.resolve() == (BASE/'release'/'board.sqlite').resolve():
+        directory = BASE/'data'/'provenance'
+    if args.provenance is not None and not directory.is_dir():
+        parser.error('--provenance must point to a directory')
+    server.provenance = {p.stem: json.loads(p.read_text(encoding='utf-8'))
+                         for p in directory.glob('*.json')} if directory else {}
     print(f'Serving benchmark board at http://{args.bind}:{args.port}/', flush=True)
     server.serve_forever()

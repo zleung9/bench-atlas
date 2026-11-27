@@ -86,6 +86,27 @@ def check(base, root=None):
                 assert all(x['verdict'] == verdict for x in filtered['items']), query
                 check_item(ds, model, filtered['items'][0])
 
+    # The website and the agent API should expose exactly the same snapshot.
+    catalog = get('api/v1/datasets')
+    assert catalog['snapshot_version'] == overview['version']
+    assert {d['id']: d['question_count'] for d in catalog['datasets']} == {k: v['n'] for k,v in sets.items()}
+    for ds in sets:
+        summaries = get('api/v1/scores', dataset=ds)['scores']
+        assert {s['model_id'] for s in summaries} == {m for d,m in scores if d == ds}
+        first = get('api/v1/questions', dataset=ds, limit=1)['items']
+        if not first:
+            continue
+        qid = first[0]['qid']
+        record = get('api/v1/question', dataset=ds, qid=qid)
+        source = get('api/detail', dataset=ds, qid=qid)
+        assert record['question']['prompt'] == source['question']['prompt']
+        assert record['question']['assets'] == source['question']['assets']
+        evaluations = {e['model_id']: e for e in record['evaluations']}
+        assert evaluations.keys() == {s['model_id'] for s in summaries}
+        for a in source['answers']:
+            e = evaluations[a['model']]
+            assert (e['answer'], e['basis'], e['verdict'], e['score']['raw']) == (a['answer'], a['basis'], a['verdict'], a['score'])
+
     if root is not None:
         check_archive(get, root, sets, scores)
 

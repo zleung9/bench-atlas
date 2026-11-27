@@ -24,10 +24,11 @@ set -eu
 test "$(hostname -s)" = cpu75
 ip -4 addr show | grep -q 'inet 10\.13\.13\.2/'
 test ! -e "$1"
-install -d -m 0755 "$1" "$1/release" "$1/web"
+install -d -m 0755 "$1" "$1/release" "$1/web" "$1/data" "$1/data/provenance"
 SH
-rsync -a -e 'ssh -o BatchMode=yes -o UpdateHostKeys=no' "$base/server.py" "$base/deploy/polymer-benchmark-board.service" "CPU75:$remote/"
+rsync -a -e 'ssh -o BatchMode=yes -o UpdateHostKeys=no' "$base/server.py" "$base/agent_api.py" "$base/openapi.json" "$base/deploy/polymer-benchmark-board.service" "CPU75:$remote/"
 rsync -a -e 'ssh -o BatchMode=yes -o UpdateHostKeys=no' "$base/web/" "CPU75:$remote/web/"
+rsync -a -e 'ssh -o BatchMode=yes -o UpdateHostKeys=no' --include='*.json' --exclude='*' "$base/data/provenance/" "CPU75:$remote/data/provenance/"
 rsync -az -e 'ssh -o BatchMode=yes -o UpdateHostKeys=no' "$base/release/board.sqlite" "CPU75:$remote/release/"
 ssh "${ssh_opts[@]}" CPU75 bash -s -- "$remote" "$digest" <<'SH'
 set -euo pipefail
@@ -37,8 +38,8 @@ new=$1
 exec 9>"$prefix/publish.lock"
 flock -x 9
 chmod 0755 "$new" "$new/web" "$new/release"
-chmod 0644 "$new/server.py" "$new/release/board.sqlite"
-chmod -R a+rX "$new/web"
+chmod 0644 "$new/server.py" "$new/agent_api.py" "$new/openapi.json" "$new/release/board.sqlite"
+chmod -R a+rX "$new/web" "$new/data"
 printf '%s  %s\n' "$2" "$new/release/board.sqlite" | sha256sum -c -
 unit=polymer-benchmark-board.service
 if test -e "/etc/systemd/system/$unit"; then
@@ -61,7 +62,7 @@ os.replace(tmp, current)
 PY
 systemctl daemon-reload
 systemctl enable "$unit"
-if systemctl restart "$unit" && curl --noproxy '*' -fsS --retry 30 --retry-delay 1 --retry-connrefused 'http://10.13.13.2:18175/api/overview' -o /dev/null && curl --noproxy '*' -fsS 'http://10.13.13.2:18175/rich.js' -o /dev/null; then
+if systemctl restart "$unit" && curl --noproxy '*' -fsS --retry 30 --retry-delay 1 --retry-connrefused 'http://10.13.13.2:18175/api/overview' -o /dev/null && curl --noproxy '*' -fsS 'http://10.13.13.2:18175/rich.js' -o /dev/null && curl --noproxy '*' -fsS 'http://10.13.13.2:18175/api/v1/datasets' -o /dev/null && curl --noproxy '*' -fsS 'http://10.13.13.2:18175/api/v1/openapi.json' -o /dev/null; then
     systemctl is-active "$unit"
     printf 'Published %s\n' "$new"
 else
