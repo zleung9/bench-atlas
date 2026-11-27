@@ -56,13 +56,13 @@ try {
       const intro=document.querySelector('.dataset-intro'), title=document.querySelector('#content h1');
       return {
         visible:[dataset,model,summary,panel,search,verdict,rows[0]].every(node=>node?.checkVisibility({checkVisibilityCSS:true,checkOpacity:true})),
-        introFirst:intro?.nextElementSibling===title && above(intro,title) && above(title,dataset) && intro.innerText.includes('150') && !intro.closest('details'),
+        titleFirst:title?.parentElement.firstElementChild===title && title.nextElementSibling===intro && above(title,intro) && above(intro,dataset) && intro.innerText.includes('150') && !intro.closest('details'),
         selectorsFirst:dataset && model && summary && above(dataset,summary) && above(model,summary),
         summaryBeforeList:summary && panel && above(summary,panel),
         samePanel:panel && panel.contains(verdict) && rows.every(row=>panel.contains(row))
       };
     })()`);
-    assert.deepEqual(layout,{visible:true,introFirst:true,selectorsFirst:true,summaryBeforeList:true,samePanel:true},`${width}px question-list layout`);
+    assert.deepEqual(layout,{visible:true,titleFirst:true,selectorsFirst:true,summaryBeforeList:true,samePanel:true},`${width}px question-list layout`);
   }
   // PolyReal question 2 has a different archived verdict for these two models.
   for (const [model,score,verdict] of [['qwen3.8','32.67%','部分正确'],['gpt-6.1-sol','91.33%','正确']]) {

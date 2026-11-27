@@ -251,7 +251,7 @@
     return {...state, dataset:String(d.id),model:state.model || defaultModel(d.id)};
   }
   function questionListHeading(d) {
-    const heading = pageHead('QUESTION INDEX', datasetName(d));
+    const heading = el('header', 'page-head', el('h1', '', datasetName(d)));
     if (!has(d.description)) return heading;
     const intro = el('p', 'lead dataset-intro');
     // The snapshot stores plain prose. Link only supported repository URLs from that prose.
@@ -265,7 +265,7 @@
         intro.append(part);
       }
     }
-    heading.querySelector('h1').before(intro);
+    heading.append(intro);
     return heading;
   }
   function buildQuestionList(state) {
